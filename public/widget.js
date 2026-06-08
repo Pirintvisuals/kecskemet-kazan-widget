@@ -62,11 +62,42 @@
     btn.onclick = toggleChat;
     container.appendChild(btn);
 
+    // Rotating teaser questions — cycled to spark engagement and show what the
+    // assistant can actually do. No emojis. Hungarian, boiler-focused.
+    const TEASERS = [
+      "Üdv! Kérjen pár kattintással ingyenes árajánlatot kazánra.",
+      "Mennyibe kerül egy új kazán beszerelése? Kérdezzen most.",
+      "Régi kazánját cserélné? Számoljon árat egy perc alatt.",
+      "Melyik kazán illik a lakásához? Segítek kiválasztani.",
+      "Kondenzációs kazán ára beszereléssel — nézze meg most.",
+      "Kérdése van a fűtésről? Írjon, azonnal válaszolok.",
+      "Kazán karbantartás vagy csere? Kérjen árajánlatot itt.",
+      "Hány négyzetmétert fűtene? Megmondom, mekkora kazán kell.",
+      "Ingyenes, kötelezettség nélküli árajánlat — kezdjük el!",
+    ];
+    let teaserIdx = 0;
+    let teaserTimer = null;
+    let teaserDismissed = false;
+
     const tooltip = document.createElement("div");
     tooltip.className = "faq-chat-tooltip";
     tooltip.setAttribute("role", "button");
     tooltip.setAttribute("tabindex", "0");
-    tooltip.innerHTML = `<span class="faq-tooltip-text">Üdv! Kérjen pár kattintással ingyenes árajánlatot kazánra.</span>`;
+    tooltip.innerHTML = `<span class="faq-tooltip-text">${TEASERS[0]}</span>`;
+    const teaserText = tooltip.querySelector(".faq-tooltip-text");
+
+    function stopTeaserRotation() {
+      if (teaserTimer) { clearInterval(teaserTimer); teaserTimer = null; }
+    }
+    function rotateTeaser() {
+      if (teaserDismissed || chatOpen) return;
+      teaserIdx = (teaserIdx + 1) % TEASERS.length;
+      teaserText.style.opacity = "0";
+      setTimeout(() => {
+        teaserText.textContent = TEASERS[teaserIdx];
+        teaserText.style.opacity = "1";
+      }, 280);
+    }
 
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
@@ -75,12 +106,15 @@
     closeBtn.innerHTML = "&times;";
     closeBtn.onclick = (e) => {
       e.stopPropagation();
+      teaserDismissed = true;
+      stopTeaserRotation();
       tooltip.classList.remove("show");
       setTimeout(() => tooltip.classList.add("hidden"), 300);
     };
 
     tooltip.appendChild(closeBtn);
     const openFromTooltip = () => {
+      stopTeaserRotation();
       tooltip.classList.remove("show");
       setTimeout(() => tooltip.classList.add("hidden"), 300);
       if (!chatOpen) toggleChat();
@@ -89,7 +123,11 @@
     tooltip.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFromTooltip(); } };
 
     container.appendChild(tooltip);
-    setTimeout(() => tooltip.classList.add("show"), 1600);
+    setTimeout(() => {
+      if (teaserDismissed) return;
+      tooltip.classList.add("show");
+      teaserTimer = setInterval(rotateTeaser, 9000); // swap the question every 9s
+    }, 1600);
   }
 
   function toggleChat() {

@@ -99,6 +99,7 @@
   pointer-events: auto;
 }
 
+.faq-tooltip-text { display: block; transition: opacity 0.28s ease; }
 .faq-chat-tooltip.show { opacity: 1; transform: translateY(0) scale(1); }
 .faq-chat-tooltip.hidden { display: none; }
 .faq-chat-tooltip:hover { box-shadow: 0 14px 36px rgba(2, 88, 136, 0.24); }
