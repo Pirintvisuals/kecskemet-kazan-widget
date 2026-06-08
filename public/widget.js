@@ -69,11 +69,11 @@
       "Mennyibe kerül egy új kazán beszerelése? Kérdezzen most.",
       "Régi kazánját cserélné? Számoljon árat egy perc alatt.",
       "Melyik kazán illik a lakásához? Segítek kiválasztani.",
-      "Kondenzációs kazán ára beszereléssel — nézze meg most.",
+      "Kondenzációs kazán ára beszereléssel, nézze meg most.",
       "Kérdése van a fűtésről? Írjon, azonnal válaszolok.",
       "Kazán karbantartás vagy csere? Kérjen árajánlatot itt.",
       "Hány négyzetmétert fűtene? Megmondom, mekkora kazán kell.",
-      "Ingyenes, kötelezettség nélküli árajánlat — kezdjük el!",
+      "Ingyenes, kötelezettség nélküli árajánlat, kezdjük el!",
     ];
     let teaserIdx = 0;
     let teaserTimer = null;
