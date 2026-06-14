@@ -28,6 +28,7 @@
     mail: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>',
     close: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
     check: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    write: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
   };
 
   function logoSrc() {
@@ -245,10 +246,22 @@
     inputBar.appendChild(inputElement);
     inputBar.appendChild(sendBtn);
 
+    // Hint shown ONLY when the customer has to type a free-text answer (the
+    // contact details at the end). It makes it obvious there are no buttons to
+    // click here — they must write something. Hidden while chips are offered.
+    const inputHint = document.createElement("div");
+    inputHint.className = "faq-input-hint";
+    inputHint.innerHTML = `${ICON.write}<span>Most Önön a sor — kérjük, írja be a válaszát, majd nyomjon Entert.</span>`;
+
+    const inputWrap = document.createElement("div");
+    inputWrap.className = "faq-input-wrap";
+    inputWrap.appendChild(inputHint);
+    inputWrap.appendChild(inputBar);
+
     chatWindow.appendChild(header);
     chatWindow.appendChild(progress);
     chatWindow.appendChild(messagesContainer);
-    chatWindow.appendChild(inputBar);
+    chatWindow.appendChild(inputWrap);
 
     container.appendChild(chatWindow);
     setTimeout(() => inputElement && inputElement.focus(), 150);
@@ -281,6 +294,21 @@
 
   function clearChips() {
     messagesContainer.querySelectorAll(".faq-chips").forEach((c) => c.remove());
+  }
+
+  // Switch the composer between "pick a button" mode (chips shown) and
+  // "type your answer" mode (no buttons — the contact-detail questions). In
+  // type mode we surface a clear hint, highlight the field and auto-focus it so
+  // it's obvious the customer must write something.
+  function setInputMode(typeMode) {
+    if (!chatWindow) return;
+    chatWindow.classList.toggle("type-mode", typeMode);
+    if (inputElement) {
+      inputElement.placeholder = typeMode
+        ? "Írja ide a válaszát…"
+        : "Válasszon fent, vagy írjon ide…";
+      if (typeMode) setTimeout(() => inputElement && inputElement.focus(), 80);
+    }
   }
 
   function makeChip(label) {
@@ -446,11 +474,18 @@
       parts.forEach(p => addMessage("bot", p));
       conversationHistory.push({ role: "assistant", content: parts.join("\n\n") });
 
+      const hasChips = Array.isArray(data.chips) && data.chips.length > 0;
+      const isComplete = !!data.lead; // final quote turn carries the lead object
+
       if (data.emailOffer && data.lead) {
         lastLead = data.lead;
         renderEmailOffer();
+        setInputMode(false);
       } else {
         renderChips(data.chips);
+        // No buttons and the quote isn't finished yet => a free-text question
+        // (name / e-mail / phone / postal code). Make that visually obvious.
+        setInputMode(!hasChips && !isComplete);
       }
     } catch (err) {
       console.error(err);

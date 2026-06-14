@@ -496,6 +496,57 @@
 .faq-send-btn:active { transform: translateY(0); }
 .faq-send-btn:focus-visible { outline: 3px solid rgba(3, 105, 161, 0.4); outline-offset: 2px; }
 
+/* ---------- "Type your answer" mode (free-text contact questions) ---------- */
+.faq-input-wrap { display: flex; flex-direction: column; }
+
+/* Hint banner: hidden by default, revealed only in type-mode. */
+.faq-input-hint {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin: 0 14px;
+  padding: 10px 14px;
+  background: #FEF3C7;            /* warm amber — clearly different from the blue chips */
+  color: #92400E;
+  border: 1.5px solid #FCD34D;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.faq-input-hint svg { flex-shrink: 0; }
+
+.faq-chat-window.type-mode .faq-input-hint {
+  display: flex;
+  animation: faqHintIn 0.3s ease-out;
+}
+
+/* In type-mode the whole composer gets emphasis: amber top accent + a gentle
+   pulse + a thicker, glowing input so it's unmistakable the user must write. */
+.faq-chat-window.type-mode .faq-chat-input {
+  border-top: 2px solid #FCD34D;
+  background: #FFFBEB;
+}
+.faq-chat-window.type-mode .faq-input-field {
+  border-color: #F59E0B;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+.faq-chat-window.type-mode .faq-input-field:focus {
+  border-color: #D97706;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.28);
+}
+.faq-chat-window.type-mode .faq-send-btn {
+  background: #F59E0B;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+.faq-chat-window.type-mode .faq-send-btn:hover { background: #D97706; }
+
+@keyframes faqHintIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ---------- Mobile ---------- */
 @media (max-width: 600px) {
   .faq-chat-window {
@@ -545,6 +596,7 @@
   .faq-chat-window,
   .faq-msg,
   .faq-chips,
+  .faq-input-hint,
   .faq-chat-tooltip { animation: none; transition: none; }
   .faq-chat-launcher:hover,
   .faq-chip:hover,
