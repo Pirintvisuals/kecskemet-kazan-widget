@@ -256,7 +256,7 @@
     // Persistent hint below messages reminding visitors they can ask freely
     const questionHint = document.createElement("div");
     questionHint.className = "faq-question-hint";
-    questionHint.textContent = "💬 Kérdezzen bátran – pl. árakról, márkákról, garanciáról, határidőkről";
+    questionHint.textContent = "Kérdezzen bátran – pl. árakról, márkákról, garanciáról, határidőkről";
 
     const inputWrap = document.createElement("div");
     inputWrap.className = "faq-input-wrap";
@@ -274,7 +274,7 @@
 
     if (!started) {
       started = true;
-      addMessage("bot", `Üdvözlöm a **${BRAND}** árajánló asszisztensénél! Néhány kérdés alapján elkészítem az **előzetes árajánlatát**.\n\n💬 **Bármit megkérdezhet** – árakról, márkákról, garanciáról, határidőkről vagy bármi másról!`);
+      addMessage("bot", `Üdvözlöm a **${BRAND}** árajánló asszisztensénél! Néhány kérdés alapján elkészítem az **előzetes árajánlatát**.\n\n**Bármit megkérdezhet** – árakról, márkákról, garanciáról, határidőkről vagy bármi másról!`);
       // Clickable example questions so visitors see they can ask freely
       const exWrap = document.createElement("div");
       exWrap.className = "faq-chips faq-example-questions";
