@@ -496,6 +496,30 @@
 .faq-send-btn:active { transform: translateY(0); }
 .faq-send-btn:focus-visible { outline: 3px solid rgba(3, 105, 161, 0.4); outline-offset: 2px; }
 
+/* Example question chips shown right after the greeting */
+.faq-example-questions {
+  margin-left: 0;
+  flex-wrap: wrap;
+}
+.faq-example-questions .faq-chip {
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: normal;
+  text-align: left;
+  line-height: 1.35;
+}
+
+/* Persistent hint bar above the input reminding visitors they can ask anything */
+.faq-question-hint {
+  padding: 7px 14px;
+  background: #F0F9FF;
+  border-top: 1px solid #BAE6FD;
+  font-size: 12px;
+  color: #0369A1;
+  text-align: center;
+  line-height: 1.4;
+}
+
 /* ---------- "Type your answer" mode (free-text contact questions) ---------- */
 .faq-input-wrap { display: flex; flex-direction: column; }
 

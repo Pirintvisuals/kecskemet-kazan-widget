@@ -234,7 +234,7 @@
     inputElement.type = "text";
     inputElement.className = "faq-input-field";
     inputElement.setAttribute("aria-label", "Írja be a válaszát");
-    inputElement.placeholder = "Írja be a válaszát…";
+    inputElement.placeholder = "Írja be a válaszát – vagy kérdezzen bátran…";
     inputElement.autocomplete = "off";
 
     const sendBtn = document.createElement("button");
@@ -253,6 +253,11 @@
     inputHint.className = "faq-input-hint";
     inputHint.innerHTML = `${ICON.write}<span>Most Önön a sor — kérjük, írja be a válaszát, majd nyomjon Entert.</span>`;
 
+    // Persistent hint below messages reminding visitors they can ask freely
+    const questionHint = document.createElement("div");
+    questionHint.className = "faq-question-hint";
+    questionHint.textContent = "💬 Kérdezzen bátran – pl. árakról, márkákról, garanciáról, határidőkről";
+
     const inputWrap = document.createElement("div");
     inputWrap.className = "faq-input-wrap";
     inputWrap.appendChild(inputHint);
@@ -261,6 +266,7 @@
     chatWindow.appendChild(header);
     chatWindow.appendChild(progress);
     chatWindow.appendChild(messagesContainer);
+    chatWindow.appendChild(questionHint);
     chatWindow.appendChild(inputWrap);
 
     container.appendChild(chatWindow);
@@ -268,7 +274,22 @@
 
     if (!started) {
       started = true;
-      addMessage("bot", `Üdvözlöm a ${BRAND} árajánló asszisztensénél! Néhány kérdés alapján elkészítem az előzetes árajánlatát.`);
+      addMessage("bot", `Üdvözlöm a **${BRAND}** árajánló asszisztensénél! Néhány kérdés alapján elkészítem az **előzetes árajánlatát**.\n\n💬 **Bármit megkérdezhet** – árakról, márkákról, garanciáról, határidőkről vagy bármi másról!`);
+      // Clickable example questions so visitors see they can ask freely
+      const exWrap = document.createElement("div");
+      exWrap.className = "faq-chips faq-example-questions";
+      const examples = [
+        "Mennyibe kerül egy kazáncsere?",
+        "Mennyi ideig tart a beépítés?",
+        "Milyen márkákat szereltek?",
+      ];
+      examples.forEach((q) => {
+        const chip = makeChip(q);
+        chip.onclick = () => { exWrap.remove(); sendMessage(q); };
+        exWrap.appendChild(chip);
+      });
+      messagesContainer.appendChild(exWrap);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
       sendMessage("Szeretnék árajánlatot kazán beépítésére / cseréjére.", true);
     }
   }
