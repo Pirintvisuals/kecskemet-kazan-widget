@@ -570,8 +570,12 @@ export default async function handler(request, response) {
             console.log(`Becsült végösszeg: ${formatHuf(quote.total)}`);
             console.log("========================================\n");
 
-            // Always notify the owner.
-            await sendQuoteEmail(sel, quote, { to: process.env.LEAD_EMAIL_TO || "pirint.milan@gmail.com", toCustomer: false });
+            // Always notify the owner + log the lead into the Google Sheet.
+            // Run both in parallel; neither blocks the other or the response.
+            await Promise.all([
+                sendQuoteEmail(sel, quote, { to: process.env.LEAD_EMAIL_TO || "pirint.milan@gmail.com", toCustomer: false }),
+                sendLeadToSheet(sel, quote),
+            ]);
 
             // Show the itemised quote in chat + offer to e-mail it to the customer.
             return response.status(200).json({
@@ -679,6 +683,54 @@ async function sendQuoteEmail(sel, quote, opts = {}) {
         return false;
     } catch (emailErr) {
         console.error("❌ Nem sikerült elküldeni az e-mailt:", emailErr.message);
+        return false;
+    }
+}
+
+// ---------------------------------------------------------------------------
+//  Google Sheet logging. POSTs the lead to a Google Apps Script web app, which
+//  appends one row to the spreadsheet. Set SHEETS_WEBHOOK_URL in .env to the
+//  deployed Apps Script URL (see README). No-ops (returns false) if unset, so
+//  the quote flow keeps working without it. The `row` array order MUST match
+//  the header row in the Apps Script / sheet.
+// ---------------------------------------------------------------------------
+async function sendLeadToSheet(sel, quote) {
+    const url = process.env.SHEETS_WEBHOOK_URL;
+    if (!url) {
+        console.log("ℹ️  Nincs SHEETS_WEBHOOK_URL — a lead nem kerül Google Sheetbe (csak e-mail).");
+        return false;
+    }
+
+    // One row per lead. Keep this order in sync with the sheet's header row.
+    const row = [
+        new Date().toISOString(),               // Időbélyeg
+        sel.name || "",                         // Név
+        sel.phone || "",                        // Telefon
+        sel.email || "",                        // E-mail
+        sel.postal_code || "",                  // Irányítószám
+        lbl("budget", sel.budget),              // Tervezett keret
+        lbl("timeline", sel.timeline),          // Tervezett kivitelezés
+        lbl("current_boiler", sel.current_boiler), // Jelenlegi kazán
+        lbl("new_boiler", sel.new_boiler),      // Új kazán
+        lbl("flue", sel.flue),                  // Kémény
+        lbl("rcd", sel.rcd),                    // Életvédelmi relé
+        quote.total,                            // Becsült végösszeg (Ft)
+    ];
+
+    try {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ row }),
+        });
+        if (res.ok) {
+            console.log("✅ Lead beírva a Google Sheetbe.");
+            return true;
+        }
+        console.error("❌ Google Sheet hiba:", res.status, await res.text());
+        return false;
+    } catch (err) {
+        console.error("❌ Nem sikerült a Google Sheetbe írni:", err.message);
         return false;
     }
 }

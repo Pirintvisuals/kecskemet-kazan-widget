@@ -96,6 +96,46 @@ the `PRICES` object at the top of [`api/faq-agent.js`](api/faq-agent.js).
 
 ---
 
+## Leads → Google Sheet
+
+Every completed lead is also appended as a row to a Google Sheet (timestamp,
+name, phone, e-mail, postal code, budget, timeline, the four choices, and the
+estimated total). This is **optional** — leave `SHEETS_WEBHOOK_URL` empty and
+the quote/e-mail flow still works exactly as before.
+
+Setup (one-time, ~3 minutes, no Google Cloud project needed):
+
+1. Create a Google Sheet. In the first row, add these headers (this exact
+   order — it matches the `row` array in `sendLeadToSheet`):
+
+   `Időbélyeg | Név | Telefon | E-mail | Irányítószám | Tervezett keret | Tervezett kivitelezés | Jelenlegi kazán | Új kazán | Kémény | Életvédelmi relé | Becsült végösszeg (Ft)`
+
+2. In that sheet: **Extensions → Apps Script**. Replace the contents with:
+
+   ```javascript
+   function doPost(e) {
+     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+     var data = JSON.parse(e.postData.contents);
+     sheet.appendRow(data.row);
+     return ContentService
+       .createTextOutput(JSON.stringify({ ok: true }))
+       .setMimeType(ContentService.MimeType.JSON);
+   }
+   ```
+
+3. **Deploy → New deployment → Web app.** Set *Execute as* = **Me**, and
+   *Who has access* = **Anyone**. Deploy, authorise, and copy the **Web app URL**
+   (ends in `/exec`).
+
+4. Paste that URL into `SHEETS_WEBHOOK_URL` in `.env` (and into the same env var
+   in the Vercel dashboard). Done — new leads now land in the sheet.
+
+> The sheet only fills in once the customer completes the whole flow (same point
+> the owner e-mail is sent). It runs in parallel with the e-mail, so neither
+> blocks the other.
+
+---
+
 ## Customising
 
 - **Prices:** edit the `PRICES` object in `api/faq-agent.js`.
