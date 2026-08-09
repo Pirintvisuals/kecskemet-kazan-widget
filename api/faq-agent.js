@@ -699,11 +699,51 @@ async function sendQuoteEmail(sel, quote, opts = {}) {
         ? `Az Ön árajánlata — Kazán Kecskemét — ${formatHuf(quote.total)}`
         : `Új árajánlat — ${sel.name || ""} (${sel.postal_code || ""}) — ${formatHuf(quote.total)}`;
 
+    // Plain-text fallback alongside the HTML — multipart mail is a deliverability
+    // best practice and HTML-only messages are more likely to get flagged.
+    const itemLines = quote.items.map(i => `- ${i.label}: ${formatHuf(i.huf)}`).join("\n");
+    const text = toCustomer
+        ? [
+            `Kedves ${sel.name || "Ügyfelünk"}!`,
+            "",
+            "Köszönjük érdeklődését. Íme az előzetes árajánlata:",
+            "",
+            itemLines,
+            "",
+            `Becsült végösszeg: ${formatHuf(quote.total)}`,
+            "",
+            "Előzetes, tájékoztató jellegű kalkuláció, bruttó (ÁFÁ-val). Az ár tartalmazza a kazánt és a teljes beépítést; a pontos márka/típus a helyszíni felmérés után véglegesül.",
+            "+36 30 260 57 56",
+        ].join("\n")
+        : [
+            "Új árajánlat érkezett.",
+            "",
+            `Név: ${sel.name || "-"}`,
+            `Telefon: ${sel.phone || "-"}`,
+            `E-mail: ${sel.email || "-"}`,
+            `Irányítószám: ${sel.postal_code || "-"}`,
+            `Tervezett keret: ${lbl("budget", sel.budget)}`,
+            `Tervezett kivitelezés: ${lbl("timeline", sel.timeline)}`,
+            "",
+            itemLines,
+            "",
+            `Becsült végösszeg: ${formatHuf(quote.total)}`,
+        ].join("\n");
+
+    // Reply-To: the sending address itself has no real inbox behind it (send-only
+    // domain), so a bare "Reply" would vanish. Point owner mail at the customer's
+    // address (reply goes straight to the lead) and customer mail at the business's
+    // real inbox — never left pointing at a dead end.
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const replyTo = toCustomer
+        ? "info@kazanszervizkecskemet.hu"
+        : (EMAIL_RE.test(sel.email || "") ? sel.email : undefined);
+
     try {
         const emailRes = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${resendKey}` },
-            body: JSON.stringify({ from: fromEmail, to: [toEmail], subject, html }),
+            body: JSON.stringify({ from: fromEmail, to: [toEmail], subject, html, text, ...(replyTo ? { reply_to: replyTo } : {}) }),
         });
 
         const result = await emailRes.json();
