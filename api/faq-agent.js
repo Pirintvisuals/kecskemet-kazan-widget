@@ -658,7 +658,10 @@ async function sendQuoteEmail(sel, quote, opts = {}) {
         ? `<p style="margin:0 0 12px">Kedves ${sel.name || "Ügyfelünk"}! Köszönjük érdeklődését. Íme az előzetes árajánlata:</p>`
         : "";
 
-    const html = `
+    // Owner notifications stay plain/transactional-looking (no colored banner) —
+    // a marketing-style template with a bold color header is what commonly gets
+    // Gmail's Promotions-tab classifier to flag it, dropping it out of the inbox.
+    const html = toCustomer ? `
     <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#111827">
       <div style="background:#0369A1;color:#ffffff;padding:20px 24px;border-radius:12px 12px 0 0">
         <h2 style="margin:0">${heading}</h2>
@@ -672,13 +675,29 @@ async function sendQuoteEmail(sel, quote, opts = {}) {
         <table style="width:100%;border-collapse:collapse;font-size:14px">${itemRows}
           <tr><td style="padding:10px 12px;font-weight:bold">Becsült végösszeg</td><td style="padding:10px 12px;text-align:right;font-weight:bold;color:#025888">${formatHuf(quote.total)}</td></tr>
         </table>
+        <p style="margin:16px 0 0;font-size:12px;color:#6b7280">Előzetes, tájékoztató jellegű kalkuláció, bruttó (ÁFÁ-val). Az ár tartalmazza a kazánt és a teljes beépítést; a pontos márka/típus a helyszíni felmérés után véglegesül. 📞 +36 30 260 57 56</p>
+      </div>
+    </div>` : `
+    <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#111827">
+      <h2 style="margin:0 0 16px;font-size:18px">${heading}</h2>
+      <div style="border:1px solid #e5e7eb;padding:24px;border-radius:8px">
+        ${intro}${clientBlock}
+        <h3 style="margin:0 0 8px">Munka jellege</h3>
+        <p style="margin:4px 0"><b>Típus:</b> ${installTypeLabel}</p>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0">
+        <h3 style="margin:0 0 8px">Kalkulált árajánlat</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px">${itemRows}
+          <tr><td style="padding:10px 12px;font-weight:bold">Becsült végösszeg</td><td style="padding:10px 12px;text-align:right;font-weight:bold;color:#025888">${formatHuf(quote.total)}</td></tr>
+        </table>
         <p style="margin:16px 0 0;font-size:12px;color:#6b7280">Előzetes, tájékoztató jellegű kalkuláció, bruttó (ÁFÁ-val). Az ár tartalmazza a kazánt és a teljes beépítést; a pontos márka/típus a helyszíni felmérés után véglegesül.${toCustomer ? " 📞 +36 30 260 57 56" : ""}</p>
       </div>
     </div>`;
 
+    // No brackets/ALL-CAPS in the subject — that pattern is a common trigger for
+    // Gmail's Promotions-tab / spam classifier on transactional owner mail.
     const subject = toCustomer
         ? `Az Ön árajánlata — Kazán Kecskemét — ${formatHuf(quote.total)}`
-        : `[ÚJ ÁRAJÁNLAT] ${sel.postal_code || ""} — ${sel.name || ""} — ${formatHuf(quote.total)}`;
+        : `Új árajánlat — ${sel.name || ""} (${sel.postal_code || ""}) — ${formatHuf(quote.total)}`;
 
     try {
         const emailRes = await fetch("https://api.resend.com/emails", {
